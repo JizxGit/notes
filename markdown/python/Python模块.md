@@ -59,10 +59,14 @@ Pickle模块中最常用的函数为：
     # aI22
     # aI33
     # a.
-    
+
     # loads
     result = pickle.loads(r)
     print(result)
     # [11, 22, 33]
     ```
 
+
+### tqdm(TODO)
+
+tqdm(list)，会自动获取list的长度，显示对应的进度
