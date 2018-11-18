@@ -7,5 +7,7 @@
            name = jizx
            email = 1822980003@qq.com
    [core]
-   		excludesfile = /Users/jizhongxian/.gitignore_global
+   	excludesfile = /Users/jizhongxian/.gitignore_global
    ```
+
+
