@@ -70,3 +70,24 @@ Pickle模块中最常用的函数为：
 ### tqdm(TODO)
 
 tqdm(list)，会自动获取list的长度，显示对应的进度
+
+
+
+### os
+
+#### 创建目录
+
+`os.mkdir` 与`os.makedirs`的差别在于 **`os.makedirs` 会递归地去建立目录**，也就是说连同中继的目录也会一起建立，就类似于 Linux 中的 `mkdir -p`．
+
+```
+>>> import os
+>>> os.mkdir('foo/bar')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+OSError: [Errno 2] No such file or directory: 'foo/bar'
+>>> os.makedirs('foo/bar')
+```
+
+使用 `os.mkdir `时，如果你给定的 path 参数是个多层的 path，如果某个中继的目录不存在(比如说上例中的 foo), Python 将会报错．
+
+但如果使用 `os.makedirs` 则 Python 会连同中间的目录一起建立．但有一点值得注意，当 path 末端的目录已经存在的话，os.makedirs 也是会引发例外．
