@@ -147,15 +147,55 @@ M  lib/simplegit.rb
 Untracked未跟踪的文件意味着 Git 在之前的快照（提交）中没有这些文件（比如新建的文件）；Git 不会自动将之纳入跟踪范围，除非你明明白白地告诉它“我需要跟踪该文件”。被追踪后处于3种状态：未修改-已修改-已暂存。将暂存的文件commit后就保存在git数据库中，文件就回到未修改状态了。
 接下来介绍如何对修改的文件进行版本控制。
 
-### 查看文件修改内容
+### 查看文件修改内容diff
 
 ![查看文件变化内容](./查看文件变化内容.png)
+
+#### 默认
 
 查看**尚未暂存的文件**更新了哪些部分，输入` git diff`
 此命令比较的是工作目录中当前文件和暂存区域快照之间的差异， 也就是修改之后还没有暂存起来的变化内容。
 
+`git diff `不加参数即默认比较工作区与暂存区
+
+比较工作区与最新本地版本库
+
+`git diff HEAD [<path>...]`  如果HEAD指向的是master分支，那么HEAD还可以换成master
+
+比较工作区与指定commit-id的差异
+
+`git diff commit-id  [<path>...] `
+
+#### --cached
+
 查看**暂存区里将要添加到下次提交**里的内容，可以用 `git diff --cached`命令。
-也就是查看暂存区里与已保存的文件的区别（Git 1.6.1 及更高版本还允许使用 git diff --staged，效果是相同的，但更好记些。）
+也就是查看暂存区里与最新本地版本库的区别（Git 1.6.1 及更高版本还允许使用 git diff --staged，效果是相同的，但更好记些。）
+
+比较暂存区与指定commit-id的差异
+
+`git diff --cached [<commit-id>][...] `
+
+比较两个commit-id之间的差异
+
+`git diff [<commit-id>][]`
+
+#### 打补丁
+
+使用git diff打补丁`git diff > patch`
+
+ patch的命名是随意的，不加其他参数时作用是当我们希望将我们本仓库工作区的修改拷贝一份到其他机器上使用，但是修改的文件比较多，拷贝量比较大，此时我们可以将修改的代码做成补丁，之后在其他机器上对应目录下使用 `git apply patch` 将补丁打上即可
+
+`git diff --cached > patch` //是将我们暂存区与版本库的差异做成补丁
+
+ `git diff --HEAD > patch `//是将工作区与版本库的差异做成补丁
+
+`git diff Testfile > patch`//将单个文件做成一个单独的补丁
+
+拓展：git apply patch 应用补丁，应用补丁之前我们可以先检验一下补丁能否应用，`git apply --check patch` 如果没有任何输出，那么表示可以顺利接受这个补丁
+
+另外可以使用`git apply --reject patch`将能打的补丁先打上，有冲突的会生成.rej文件，此时可以找到这些文件进行手动打补丁
+
+
 
 ### 忽略文件（不追踪文件）
 
@@ -655,6 +695,328 @@ dev是本地新建的分支名字，origin/dev是远程分支
 
 ![commit 操作解释](./commit操作解释.png)
 
+
+
+### 分支合并
+
+快速合并：`$ git merge dev`
+
+![快速合并1](./快速合并1.png)
+
+![快速合并2](./快速合并2.png)
+
+关闭快速合并，这样在Git就会在merge时生成一个新的commit，这样，从分支历史上就可以看出分支信息。
+
+`$ git merge --no-ff -m "merge withno-ff" dev`
+
+![关闭快速合并](./关闭快速合并.png)
+
+#### 合并冲突
+
+有时候合并操作不会如此顺利。如果你在两个不同的分支中，对同一个文件的<u>同一个部分</u>进行了<u>不同的修改</u>，Git 就没法干净的合并它们。此时 Git 做了部分合并工作，但是没有自动地创建一个新的合并提交。 Git 会暂停下来，等待你去解决合并产生的冲突。
+
+例子：
+
+`master`分支和`feature1`分支各自都分别对同一部分修改并有新的提交，就会产生冲突
+
+![合并冲突1](./合并冲突1.png)
+
+Git告诉我们，readme.txt文件存在冲突，必须手动解决冲突后再提交，可以直接查看readme.txt的内容：
+
+```
+Git is a distributed version control system.
+Git is free software distributed under theGPL.
+Git has a mutable index called stage.
+Git tracks changes of files.
+<<<<<<<HEAD
+Creating a new branchis quick & simple.
+=========
+Creating a new branchis quick AND simple.
+>>>>>>>feature1
+```
+
+Git用`<<<<<<<`，`=======`，`>>>>>>>`标记出不同分支的内容。
+
+![合并冲突2](./合并冲突2.png)
+
+为了冲突解决，你可以选择使用由` ======= `分割的两部分中的一个，或者你也可以自行合并这些内容（可以是完全新的内容），并且 `<<<<<<<` ,` =======` , 和`>>>>>>> `这些行要被完全删除了。
+
+ 在你解决了所有文件里的冲突之后，对每个文件**使用`git add` 命令来将其标记为冲突已解决**。 一旦暂存这些原本有冲突的文件，Git 就会将它们标记为冲突已解决，然后commit保存入仓库。
+
+![合并冲突3](./合并冲突3.png)
+
+如果你想使用图形化工具来解决冲突，你可以运行 git mergetool，该命令会为你启动一个合适的可视化合并工具，并带领你一步一步解决这些冲突：
+
+`$ git mergetool`
+
+ 
+
+查看已合并的分支，从而删除没用的分支
+
+```bash
+$ git branch --merged
+  iss53
+* master
+```
+
+查看未合并的分支
+
+```bash
+$ git branch --no-merged
+  testing
+```
+
+
+
+**总结：**
+
+Git鼓励大量使用分支：
+
+- 查看分支：git branch
+- 创建分支：git branch <name>
+
+- 切换分支：git checkout <name>
+- 创建+切换分支：git checkout -b <name>
+- 合并某分支到当前分支：git merge <name>
+- 删除分支：git branch -d <name>
+
+
+
+### 跟踪分支
+
+从一个远程跟踪分支检出一个本地分支，这个本地分支就叫做“跟踪分支”（有时候也叫做 “上游分支”）。 **跟踪分支是与远程分支有直接关系的本地分支**。 如果在一个跟踪分支上输入`git pull`，Git 能自动地识别去哪个服务器上抓取、合并到哪个分支。
+
+- 创建跟踪分支：`git checkout -b [branch][remotename]/[branch]`
+
+  例如：
+
+  ```bash
+  $ git checkout -b sf origin/serverfix
+
+  Branch sf set upto track remote branch serverfix from origin.
+
+  Switched to a newbranch 'sf'
+  ```
+
+- **设置已有的本地分支**跟踪一个刚刚拉取下来的远程分支，或者想要修改正在跟踪的上游分支，你可以在任意时间使用 `-u` 或 `--set-upstream-to` 选项运行 `git branch` 来显式地设置。
+
+  ```bash
+  $ git branch -uorigin/serverfix
+
+  Branch serverfixset up to track remote branch serverfix from origin.
+  ```
+
+可以使用 `git branch -vv` 。 这会将所有的本地分支列出来并且包含更多的信息，如每一个分支正在跟踪哪个远程分支与本地分支是否是领先、落后或是都有。
+
+例如：
+
+```bash
+$ git branch -vv
+
+  iss53    7e424c3 [origin/iss53: ahead 2] forgot the brackets
+
+  master   1ae2a45 [origin/master] deploying index fix
+
+* serverfix  f8674d9 [teamone/server-fix-good: ahead 3, behind 1]this should do it
+
+  testing  5ea463a trying something new
+```
+
+可以看到 serverfix 分支正在跟踪 teamone 服务器上的 server-fix-good 分支并且领先 3落后 1，意味着服务器上有一次提交还没有合并入同时本地有三次提交还没有推送。
+这些数字的值来自于你从每个服务器上最后一次抓取(fetch)的数据。 这个命令(branch -vv)并没有连接服务器，它只会告诉你关于本地缓存的服务器数据。 如果想要统计最新的领先与落后数字，需要在运行此命令前抓取所有的远程仓库。
+可以像这样做：
+`git fetch --all; git branch –vv`
+
+
+
+### 标签
+
+Git 可以给历史中的某一个提交打上标签，以示重要。
+
+Git 使用两种主要类型的标签：**轻量标签**（lightweight）与**附注标签**（annotated）。
+
+- 轻量标签很像一个不会改变的分支 - 它只是一个特定提交的引用。
+- 附注标签是存储在 Git 数据库中的一个完整对象。它们是可以被校验的；其中包含打标签者的名字、电子邮件地址、日期时间；通常建议创建附注标签，这样你可以拥有以上所有信息
+
+**标签创建**
+
+`$ ``git tag` 查看标签，**注意**，标签不是按时间顺序列出，而是按字母排序的。
+
+`$ git tagv1.0 ` 标签默认是打在最新提交的commit上的,标签名为v1.0
+
+`$ git tag -a v1.0 -m "version 1.0released" commit_id` 可以创建带有说明的附注标签，用`-a`指定标签名，`-m`指定说明文字。
+
+**补打标签**
+
+`$ git  tag  v1.0 commit_id` 你也可以对过去的提交打标签，指定某个历史打标签，通过`$ git log --pretty=oneline --abbrev-commit`查找到对应要打标签的`commit_id`。
+
+`$ git show <tagname>`可以看到说明文字。
+
+**标签推送**
+
+默认情况下，**`git push `命令并<u>不会</u>传送标签到远程仓库服务器**上。 在创建完标签后你必须显式地推送标签到共享服务器上
+
+`$ git push origin <tagname>` 推送某个标签到远程。
+
+`$ git push origin –-tags`  一次性推送全部尚未推送到远程的本地标签.
+
+**标签删除**
+
+`$ git tag -d v1.0`如果标签打错了，也可以删除。
+
+如果标签已经推送到远程，要删除远程标签就麻烦一点，先从本地删除：
+
+```bash
+$ git tag -d v1.0
+
+Deleted tag 'v1.0' (was 6224937)
+```
+
+然后，从远程删除。删除命令也是push，但是格式如下：
+
+`$ git pushorigin :refs/tags/v1.0`//可以删除一个远程标签。
+
+
+
+**标签切换**
+
+如果你想要工作目录与仓库中特定的标签版本完全一样，可以使用 `git checkout -b[branchname][tagname] `在特定的标签上创建一个新分支：
+
+```bash
+$ git checkout -b version2 v2.0.0
+
+Switched to a new branch 'version2'
+```
+
+当然，如果在这之后又进行了一次提交，version2 分支会因为改动向前移动了，那么 version2 分支就会和 v2.0.0 标签稍微有些不同，这时就应该当心了。
+
+
+
+
+
+### 大文件更新Update(TODO未看)
+
+我们知道 Git 不仅仅是用来做代码版本管理的，很多其他领域的项目也会使用 Git。比如说我公司曾经一个客户的项目涉及到精密零件图纸文档的版本管理，他们也用Git。有一种使用场景是**对一些体积庞大的文件进行修改**，但是每一次保存 Git 都要计算文件的变化并更新工作区，这在硬盘慢的时候延迟卡顿非常明显。
+
+git update-index --assume-unchanged 的真正用法是这样的：
+
+1. 你正在修改一个巨大的文件，你先对其 git update-index --assume-unchanged，这样 Git 暂时不会理睬你对文件做的修改；
+2. 当你的工作告一段落决定可以提交的时候，重置改标识：git update-index --no-assume-unchanged，于是 Git 只需要做一次更新，这是完全可以接受的了；
+3. 提交＋推送。
+
+
+
+### 配置命令别名
+
+- 配置别名有点像C语言里的宏，进行简单的替换。
+- **替换单个词**，告诉Git，以后`st`就表示`status`
+
+`$ git config--global alias.st status`
+
+当然还有别的命令可以简写，很多人都用co表示checkout，ci表示commit，br表示branch：
+
+```
+$ git config--global alias.co checkout
+$ git config--global alias.ci commit
+$ git config --globalalias.br branch
+```
+
+- **替换多个词**（用单引号包含着多个词）；
+
+1. 命令`git reset HEAD file`可以把暂存区的修改撤销掉（unstage），重新放回工作区。既然是一个unstage操作，就可以配置一个`unstage`别名：`$ git config --global alias.unstage 'reset HEAD'`
+
+2. 配置格式化打印log的：（将`log--pretty=format:"%h - %an - %ar : %s"`定义为linelog）：
+
+      ```
+      $ git config--global alias.linelog 'log --pretty=format:"%h - %an - %ar : %s"'
+      ```
+
+- 撤销别名，打开配置文件删除即可，详见【配置文件】章节
+
+
+### 配置文件
+
+Git的时候，加上--global是针对当前用户（整个软件）起作用的，如果不加，那只针对当前的仓库（当前文件夹）起作用。
+
+- **当前仓库配置文件**：每个仓库的Git配置文件都放在.git/config文件中：
+
+  ```bash
+  $ cat .git/config 
+  [core]
+      repositoryformatversion = 0
+      filemode = true
+      bare = false
+      logallrefupdates = true
+      ignorecase = true
+      precomposeunicode = true
+  [remote "origin"]
+      url = git@github.com:michaelliao/learngit.git
+      fetch = +refs/heads/*:refs/remotes/origin/*
+  [branch "master"]
+      remote = origin
+      merge = refs/heads/master
+  [alias]
+      last = log -1
+  ```
+
+  别名就在[alias]后面，要删除别名，直接把对应的行删掉即可。
+
+
+- **全局配置文**件：放在用户主目录（window系统中的用户目录下）下的一个隐藏文件.gitconfig中：
+
+  ```bash
+  $ cat ~/.gitconfig
+  [alias]
+      co = checkout
+      ci = commit
+      br = branch
+      st = status
+  [user]
+      name = Your Name
+  email = your@email.com
+  ```
+
+  配置别名也可以直接修改这个文件，如果改错了，可以删掉文件重新通过命令配置。
+
+## Github
+
+### 参与Github开源项目
+
+如何参与一个开源项目呢？比如人气极高的bootstrap项目，这是一个非常强大的CSS框架，你可以访问它的项目主页<https://github.com/twbs/bootstrap>，点“`Fork`”，将别人的仓库在自己的账号下克隆了一个bootstrap仓库，然后，从自己的账号下clone：`git‍ clone ‍git@github.com:jizxGit/bootstrap.git`
+
+一定要从自己的账号下clone仓库，这样你才能推送修改，因为你在github添加了SSH。如果从bootstrap的作者的仓库地址git@github.com:twbs/bootstrap.git克隆，因为没有权限，你将不能推送修改。
+
+ 
+
+Bootstrap的官方仓库twbs/bootstrap、你在GitHub上克隆的仓库my/bootstrap，以及你自己克隆到本地电脑的仓库，他们的关系就像下图显示的那样：
+
+![参与Github开源项目1](./参与Github开源项目1.png)
+
+如果你想修复bootstrap的一个bug，或者新增一个功能，立刻就可以开始干活，干完后，往自己的仓库推送。
+
+如果你希望bootstrap的官方库能接受你的修改，你就可以在GitHub上发起一个`pull request`。当然，对方是否接受你的pull request就不一定了。
+
+![参与Github开源项目2](./参与Github开源项目2.png)
+
+
+
+### 小组合作
+
+1. 首先在github上创建一个需要与团队共享的仓库
+
+2. 然后在仓库的Settings中添加队友的github帐户： 
+
+    ![小组合作1](./小组合作1.png)         
+
+   ![小组合作2](./小组合作2.png)                  
+
+3. 添加完成后，对方会收到请求，如下图，需要对方同意请求，才算是加入到这个团队中，拥有push的权限。
+
+   ![小组合作3](./小组合作3.png) 
+
+**流程会像这样**：
+
+A拥有repository，想要让B也能更新自己的repository，就把B加入collaborators，这样B要一起合作这份code的时候，clone A 的clone repo到本地，然后B就可以在自己的本机尽情修改code (用branch、commit、merge)，最后在push的时候输入B自己的帐密，会更新A的repository(A仍就可以继续更新自己的repository)，但B自己的github账户并不会有一份和A相同的repository(只会有A的repo连结)
 
 
 
