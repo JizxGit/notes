@@ -13,6 +13,10 @@ zxji@192.168.140.158's password:
 [zxji@localhost logs]$ tensorboard --port=6006 --logdir="./"
 ```
 
-最后就可以在本机的浏览器输入`http://localhost:16006` 访问
+最后就可以在本机的浏览器输入
+
+```
+http://localhost:16006
+```
 
 > 注意16006、6006 这些端口
