@@ -1274,6 +1274,63 @@ int checkSystem(){
 
 ![小端字节序与大端字节序](./小端字节序与大端字节序.png)
 
+再来一题复习一下吧：
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+struct s{
+    int cc;
+    short ccc;
+    char cccc;
+};
+
+int main(){
+    int* b;
+    int a[2][3]={{1,1,1},{2,2,2}};
+
+    //Null的地址为0x00000000
+    printf("%p\n",NULL);
+    //因为未初始化，所以指定为NULL后一个地址,0x00000008，
+    //我们创建了一个指向int的指针,但是并没有初始化,也就是说,
+	//指针会得到一个随机的地址(至少大部分系统上面是这样),可创建指针的过程并不包含对于某个整形内存上空间的开辟
+    printf("%p\n",b);
+
+    printf("%d\n",sizeof(struct s));
+    printf("%p\n",&a);
+    printf("%p\n",a);
+    printf("&a[0]:%p\n",&a[0]);
+    printf("&a[1]:%p\n",&a[1]);
+    printf("a[1]:%p\n",a[1]);
+    printf("*(a+1):%p\n",*(a+1));
+    printf("&a+1:%p\n",&a+1);
+    printf("a[0]+1:%p\n",a[0]+1);
+    printf("&a[0]+1:%p\n",&a[0]+1);
+    printf("a+1:%p\n",a+1);
+    printf("&a+2:%p\n",&a+2);
+    printf("%p\n",&a[0]+1);
+
+    return 0;
+}
+/*
+00000000
+00000030
+8
+0060FEF4
+0060FEF4
+&a[0]:0060FEF4
+&a[1]:0060FF00
+a[1]:0060FF00
+*(a+1):0060FF00
+&a+1:0060FF0C
+a[0]+1:0060FEF8
+&a[0]+1:0060FF00
+a+1:0060FF00
+&a+2:0060FF24
+0060FF00
+*/
+```
+
 
 
 ### 函数、数组、指针
